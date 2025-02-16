@@ -15,6 +15,7 @@ datasource db {
 //グルメインスタグラマー情報
 model GourmetAccount {
   id                 Int             @id @default(autoincrement())  
+  supabaseUserId     String
   instagramId        String              // InstagramプロフィールのID
   posts              Post[]              // グルメ発信者の投稿
   createdAt          DateTime            @default(now())
