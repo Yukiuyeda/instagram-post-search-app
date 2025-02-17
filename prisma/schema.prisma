@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+
+  directUrl = env("DIRECT_URL")
+}
+
+//グルメインスタグラマー情報
+model GourmetAccount {
+  id                 Int             @id @default(autoincrement())  
+  supabaseUserId     String          @unique　//findUniqueでデータ取得できるように
+  instagramId        String              // InstagramプロフィールのID
+  posts              Post[]              // グルメ発信者の投稿
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  //リレーション
+  instagramProfile   InstagramProfile?
+}
+
+//インスタグラムプロフィール情報
+model InstagramProfile {
+  id           　　　Int  @id @default(autoincrement())
+  username     　　　String  @unique           // Instagramのユーザー名
+  profileImage 　　　String?                    // プロフィール画像URL
+  followersCount    Int?                        // フォロワー数
+  postsCount   　　　Int?                        // 投稿数
+  bio          　　　String?                     // プロフィール文
+  createdAt   　　　 DateTime @default(now())
+  updatedAt    　　　DateTime @updatedAt
+
+  //リレーション
+  gourmetAccountId 　Int @unique
+  gourmetAccount  　 GourmetAccount @relation(fields: [gourmetAccountId], references: [id])
+}
+
+// 投稿情報
+model Post {
+  id          　　　　Int          @id @default(autoincrement())
+  gourmetAccount     GourmetAccount       @relation(fields: [gourmetAccountId], references: [id])
+  gourmetAccountId   Int
+
+  caption            String?         // 投稿のキャプション
+  imageUrl           String          // 投稿の画像URL
+  thumbnailUrl       String?        // リール動画のサムネイルURL
+  instagramUrl       String         // 投稿のインスタリンク
+  postedAt 　　       DateTime       // 投稿時間
+  //エリア・ジャンル・こだわり分類
+  areaId 　　　　　　　Int?      // 投稿のエリア分類（1対多）
+  genreId 　　　　　　 Int?   // 投稿のジャンル分類（1対多）
+  postTastes          PostTaste[]  // 投稿のこだわり分類（多対多）
+
+  //リレーション  
+  area               Area?  @relation(fields: [areaId], references: [id])
+  genre              Genre? @relation(fields: [genreId], references: [id])
+  
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+// エリア（梅田・淀屋橋など）
+model Area {
+  id       Int            @id @default(autoincrement())
+  name     String         @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  //リレーション
+  posts    Post[] // 複数の投稿と紐づく
+}
+
+// ジャンル（お肉・ラーメンなど）
+model Genre {
+  id       Int         @id @default(autoincrement())
+  name     String      @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  //リレーション
+  posts    Post[] // 複数の投稿と紐づく
+}
+
+// こだわり（個室あり・コスパ良いなど）
+model Taste {
+  id       Int             @id @default(autoincrement())
+  name     String          @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  //リレーション
+  posts    PostTaste[] // 複数の投稿と紐づく
+}
+
+//投稿とこだわりの中間テーブル（多対多）
+model PostTaste {
+  id      Int  @id @default(autoincrement())
+  postId  Int
+  tasteId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post    Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  taste   Taste @relation(fields: [tasteId], references: [id], onDelete: Cascade)
+}
