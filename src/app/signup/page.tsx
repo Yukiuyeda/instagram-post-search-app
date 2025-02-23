@@ -1,13 +1,28 @@
 import { supabase } from "@/utils/supabase";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+
+  //SupabaseのsugnUpメソッドを使ってユーザー登録。emailとpasswordを引数にとる
+  const { error } = await supabase.auth.signUp({ email, password });
+
+  if (error) {
+    alert('登録に失敗しました')
+  } else {
+    setEmail('')
+    setPassword('')
+    alert('確認メールを送信しました。')
+  }
+};
+
 const page = () => {
   return (
     <div>
-      <form>
+      <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">Email</label>
           <input
@@ -32,9 +47,12 @@ const page = () => {
             value={password}
             required
             onChange={(e) => {
-              setEmail(e.target.value);
+              setPassword(e.target.value);
             }}
           />
+        </div>
+        <div>
+          <button type="submit">新規登録する</button>
         </div>
       </form>
     </div>
